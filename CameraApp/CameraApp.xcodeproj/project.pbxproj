@@ -12,6 +12,9 @@
 		0CEEF4642C5AD60700F743FB /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEF4632C5AD60700F743FB /* CameraViewController.swift */; };
 		0CEEF4692C5AD60700F743FB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0CEEF4682C5AD60700F743FB /* Assets.xcassets */; };
 		0CEEF46C2C5AD60700F743FB /* Base in Resources */ = {isa = PBXBuildFile; fileRef = 0CEEF46B2C5AD60700F743FB /* Base */; };
+		0CEEF4742C5BAE7E00F743FB /* FramesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEF4732C5BAE7E00F743FB /* FramesViewController.swift */; };
+		0CEEF4762C5BAEA900F743FB /* FrameCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEF4752C5BAEA900F743FB /* FrameCell.swift */; };
+		0CEEF4782C5BB15E00F743FB /* PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEF4772C5BB15E00F743FB /* PreviewView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +25,9 @@
 		0CEEF4682C5AD60700F743FB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0CEEF46B2C5AD60700F743FB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0CEEF46D2C5AD60700F743FB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0CEEF4732C5BAE7E00F743FB /* FramesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FramesViewController.swift; sourceTree = "<group>"; };
+		0CEEF4752C5BAEA900F743FB /* FrameCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameCell.swift; sourceTree = "<group>"; };
+		0CEEF4772C5BB15E00F743FB /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,14 +60,41 @@
 		0CEEF45E2C5AD60700F743FB /* CameraApp */ = {
 			isa = PBXGroup;
 			children = (
-				0CEEF45F2C5AD60700F743FB /* AppDelegate.swift */,
-				0CEEF4612C5AD60700F743FB /* SceneDelegate.swift */,
-				0CEEF4632C5AD60700F743FB /* CameraViewController.swift */,
+				0CEEF47B2C5CF2D800F743FB /* Resources */,
+				0CEEF47A2C5CF2CB00F743FB /* Views */,
+				0CEEF4792C5CF2B800F743FB /* ViewControllers */,
 				0CEEF4682C5AD60700F743FB /* Assets.xcassets */,
 				0CEEF46A2C5AD60700F743FB /* LaunchScreen.storyboard */,
 				0CEEF46D2C5AD60700F743FB /* Info.plist */,
 			);
 			path = CameraApp;
+			sourceTree = "<group>";
+		};
+		0CEEF4792C5CF2B800F743FB /* ViewControllers */ = {
+			isa = PBXGroup;
+			children = (
+				0CEEF4732C5BAE7E00F743FB /* FramesViewController.swift */,
+				0CEEF4632C5AD60700F743FB /* CameraViewController.swift */,
+			);
+			path = ViewControllers;
+			sourceTree = "<group>";
+		};
+		0CEEF47A2C5CF2CB00F743FB /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				0CEEF4772C5BB15E00F743FB /* PreviewView.swift */,
+				0CEEF4752C5BAEA900F743FB /* FrameCell.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		0CEEF47B2C5CF2D800F743FB /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				0CEEF45F2C5AD60700F743FB /* AppDelegate.swift */,
+				0CEEF4612C5AD60700F743FB /* SceneDelegate.swift */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -135,8 +168,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				0CEEF4642C5AD60700F743FB /* CameraViewController.swift in Sources */,
+				0CEEF4762C5BAEA900F743FB /* FrameCell.swift in Sources */,
 				0CEEF4602C5AD60700F743FB /* AppDelegate.swift in Sources */,
+				0CEEF4742C5BAE7E00F743FB /* FramesViewController.swift in Sources */,
 				0CEEF4622C5AD60700F743FB /* SceneDelegate.swift in Sources */,
+				0CEEF4782C5BB15E00F743FB /* PreviewView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -294,7 +330,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.crascodes.picEnhance.CameraApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.crascodes.picEnhance;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -323,7 +359,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.crascodes.picEnhance.CameraApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.crascodes.picEnhance;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
