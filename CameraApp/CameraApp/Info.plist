@@ -19,5 +19,9 @@
 			</array>
 		</dict>
 	</dict>
+    <key>NSCameraUsageDescription</key>
+    <string>Uygulamanızın kamera erişimi gerekiyor çünkü kamera ile fotoğraf çekmek istiyoruz.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Uygulamanızın fotoğraf kütüphanesine erişimi gerekiyor çünkü çektiğimiz fotoğrafları kaydetmek istiyoruz.</string>
 </dict>
 </plist>
