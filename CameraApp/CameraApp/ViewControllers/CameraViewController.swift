@@ -30,6 +30,7 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
     let pausePlayButton = UIButton(type: .custom)
     let showFramesButton = UIButton(type: .system)
     let timerLabel = UILabel()
+    let exitButton = UIButton(type: .system)
     
     var isCapturing = false
     var remainingTime: Double = 30.0
@@ -110,6 +111,7 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
         pausePlayButton.translatesAutoresizingMaskIntoConstraints = false
         showFramesButton.translatesAutoresizingMaskIntoConstraints = false
         timerLabel.translatesAutoresizingMaskIntoConstraints = false
+        exitButton.translatesAutoresizingMaskIntoConstraints = false
         
         isoPicker.dataSource = self
         isoPicker.delegate = self
@@ -127,11 +129,14 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
         pausePlayButton.layer.borderWidth = 2
         pausePlayButton.layer.borderColor = UIColor.white.cgColor
         pausePlayButton.addTarget(self, action: #selector(toggleCapture), for: .touchUpInside)
+        pausePlayButton.addTarget(self, action: #selector(buttonTouchDown), for: .touchDown)
+        pausePlayButton.addTarget(self, action: #selector(buttonTouchUp), for: [.touchUpInside, .touchUpOutside])
         
         let innerCircle = UIView()
         innerCircle.translatesAutoresizingMaskIntoConstraints = false
         innerCircle.backgroundColor = .red
         innerCircle.layer.cornerRadius = 15
+        innerCircle.isUserInteractionEnabled = false
         pausePlayButton.addSubview(innerCircle)
         
         view.addSubview(pausePlayButton)
@@ -139,6 +144,12 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
         showFramesButton.setTitle("Show Frames", for: .normal)
         showFramesButton.addTarget(self, action: #selector(showCapturedFrames), for: .touchUpInside)
         view.addSubview(showFramesButton)
+        
+        exitButton.setTitle("Exit", for: .normal)
+        exitButton.setTitleColor(.white, for: .normal)
+        exitButton.addTarget(self, action: #selector(exitAction), for: .touchUpInside)
+        view.addSubview(exitButton)
+        exitButton.isHidden = true
         
         timerLabel.textColor = .white
         timerLabel.textAlignment = .center
@@ -177,6 +188,9 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
             
             timerLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            exitButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            exitButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 10),
         ])
     }
     
@@ -205,6 +219,10 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
         timer = nil
         movieOutput.stopRecording()
         updateInnerCircleColor(isCapturing: false)
+        pausePlayButton.isHidden = true
+        isoPicker.isHidden = true
+        shutterSpeedPicker.isHidden = true
+        exitButton.isHidden = false
     }
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
@@ -248,10 +266,31 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
         }
     }
     
+    @objc func buttonTouchDown(sender: UIButton) {
+        sender.alpha = 0.5
+    }
+    
+    @objc func buttonTouchUp(sender: UIButton) {
+        sender.alpha = 1.0
+    }
+    
     @objc func showCapturedFrames() {
         let framesViewController = FramesViewController()
         framesViewController.frames = capturedFrames
         navigationController?.pushViewController(framesViewController, animated: true)
+    }
+    
+    @objc func exitAction() {
+        pausePlayButton.isHidden = false
+        isoPicker.isHidden = false
+        shutterSpeedPicker.isHidden = false
+        exitButton.isHidden =
+        capturedFrames.removeAll()
+        capturedImageView.image = nil
+        remainingTime = 30.0
+        timerLabel.text = "00:30"
+        isCapturing = false
+        updateInnerCircleColor(isCapturing: false)
     }
     
     func updateTimerLabel() {
@@ -267,7 +306,7 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
     
     func updateInnerCircleColor(isCapturing: Bool) {
         if let innerCircle = pausePlayButton.subviews.first {
-            innerCircle.backgroundColor = isCapturing ? .red : .gray
+            innerCircle.backgroundColor = isCapturing ? .red : .red
         }
     }
     
