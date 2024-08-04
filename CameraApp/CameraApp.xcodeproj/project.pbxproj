@@ -15,6 +15,8 @@
 		0CEEF4742C5BAE7E00F743FB /* FramesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEF4732C5BAE7E00F743FB /* FramesViewController.swift */; };
 		0CEEF4762C5BAEA900F743FB /* FrameCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEF4752C5BAEA900F743FB /* FrameCell.swift */; };
 		0CEEF4782C5BB15E00F743FB /* PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEF4772C5BB15E00F743FB /* PreviewView.swift */; };
+		0CEEF47D2C5FF27F00F743FB /* FramesInfoBottomSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEF47C2C5FF27F00F743FB /* FramesInfoBottomSheetViewController.swift */; };
+		0CEEF47F2C60248800F743FB /* CapturedImagesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEF47E2C60248800F743FB /* CapturedImagesViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +30,8 @@
 		0CEEF4732C5BAE7E00F743FB /* FramesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FramesViewController.swift; sourceTree = "<group>"; };
 		0CEEF4752C5BAEA900F743FB /* FrameCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameCell.swift; sourceTree = "<group>"; };
 		0CEEF4772C5BB15E00F743FB /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
+		0CEEF47C2C5FF27F00F743FB /* FramesInfoBottomSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FramesInfoBottomSheetViewController.swift; sourceTree = "<group>"; };
+		0CEEF47E2C60248800F743FB /* CapturedImagesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedImagesViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +79,8 @@
 			children = (
 				0CEEF4732C5BAE7E00F743FB /* FramesViewController.swift */,
 				0CEEF4632C5AD60700F743FB /* CameraViewController.swift */,
+				0CEEF47C2C5FF27F00F743FB /* FramesInfoBottomSheetViewController.swift */,
+				0CEEF47E2C60248800F743FB /* CapturedImagesViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -169,9 +175,11 @@
 			files = (
 				0CEEF4642C5AD60700F743FB /* CameraViewController.swift in Sources */,
 				0CEEF4762C5BAEA900F743FB /* FrameCell.swift in Sources */,
+				0CEEF47F2C60248800F743FB /* CapturedImagesViewController.swift in Sources */,
 				0CEEF4602C5AD60700F743FB /* AppDelegate.swift in Sources */,
 				0CEEF4742C5BAE7E00F743FB /* FramesViewController.swift in Sources */,
 				0CEEF4622C5AD60700F743FB /* SceneDelegate.swift in Sources */,
+				0CEEF47D2C5FF27F00F743FB /* FramesInfoBottomSheetViewController.swift in Sources */,
 				0CEEF4782C5BB15E00F743FB /* PreviewView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -23,14 +23,19 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
     var shutterSpeedSettings: [Double] = [1/1000, 1/500, 1/250, 1/125, 1/60, 1/30]
     
     var capturedFrames: [UIImage] = []
+    var videoSegments: [URL] = []
+    var lastCapturedFrame: UIImage?
     
     let isoPicker = UIPickerView()
     let shutterSpeedPicker = UIPickerView()
     let capturedImageView = UIImageView()
     let pausePlayButton = UIButton(type: .custom)
     let showFramesButton = UIButton(type: .system)
+    let uploadButton = UIButton(type: .system)
     let timerLabel = UILabel()
     let exitButton = UIButton(type: .system)
+    let infoButton = UIButton(type: .system)
+    let loadingIndicator = UIProgressView(progressViewStyle: .default)
     
     var isCapturing = false
     var remainingTime: Double = 30.0
@@ -110,8 +115,11 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
         capturedImageView.translatesAutoresizingMaskIntoConstraints = false
         pausePlayButton.translatesAutoresizingMaskIntoConstraints = false
         showFramesButton.translatesAutoresizingMaskIntoConstraints = false
+        uploadButton.translatesAutoresizingMaskIntoConstraints = false
         timerLabel.translatesAutoresizingMaskIntoConstraints = false
         exitButton.translatesAutoresizingMaskIntoConstraints = false
+        infoButton.translatesAutoresizingMaskIntoConstraints = false
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
         
         isoPicker.dataSource = self
         isoPicker.delegate = self
@@ -142,20 +150,49 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
         view.addSubview(pausePlayButton)
         
         showFramesButton.setTitle("Show Frames", for: .normal)
+        showFramesButton.setTitleColor(.white, for: .normal)
+        showFramesButton.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        showFramesButton.layer.cornerRadius = 8
+        showFramesButton.layer.masksToBounds = true
         showFramesButton.addTarget(self, action: #selector(showCapturedFrames), for: .touchUpInside)
+        showFramesButton.isHidden = true
         view.addSubview(showFramesButton)
         
-        exitButton.setTitle("Exit", for: .normal)
+        uploadButton.setTitle("Upload", for: .normal)
+        uploadButton.setTitleColor(.white, for: .normal)
+        uploadButton.backgroundColor = .purple
+        uploadButton.layer.cornerRadius = 8
+        uploadButton.layer.masksToBounds = true
+        uploadButton.setImage(UIImage(systemName: "square.and.arrow.up.circle.fill"), for: .normal)
+        uploadButton.tintColor = .yellow
+        uploadButton.addTarget(self, action: #selector(uploadAction), for: .touchUpInside)
+        uploadButton.isHidden = true
+        uploadButton.semanticContentAttribute = .forceRightToLeft
+        view.addSubview(uploadButton)
+        
+        exitButton.setTitle("Retake Video", for: .normal)
         exitButton.setTitleColor(.white, for: .normal)
+        exitButton.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        exitButton.layer.cornerRadius = 8
+        exitButton.layer.masksToBounds = true
         exitButton.addTarget(self, action: #selector(exitAction), for: .touchUpInside)
         view.addSubview(exitButton)
         exitButton.isHidden = true
+        
+        infoButton.setImage(UIImage(systemName: "info.circle.fill"), for: .normal)
+        infoButton.tintColor = .white
+        infoButton.addTarget(self, action: #selector(showInfo), for: .touchUpInside)
+        view.addSubview(infoButton)
+        infoButton.isHidden = true
         
         timerLabel.textColor = .white
         timerLabel.textAlignment = .center
         timerLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 18, weight: .medium)
         timerLabel.text = "00:30"
         view.addSubview(timerLabel)
+        
+        view.addSubview(loadingIndicator)
+        loadingIndicator.isHidden = true
         
         NSLayoutConstraint.activate([
             previewView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -183,20 +220,40 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
             shutterSpeedPicker.widthAnchor.constraint(equalToConstant: 60),
             shutterSpeedPicker.heightAnchor.constraint(equalToConstant: 60),
             
-            showFramesButton.leadingAnchor.constraint(equalTo: pausePlayButton.trailingAnchor, constant: 20),
-            showFramesButton.centerYAnchor.constraint(equalTo: pausePlayButton.centerYAnchor),
+            showFramesButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            showFramesButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            showFramesButton.heightAnchor.constraint(equalToConstant: 40),
+            showFramesButton.widthAnchor.constraint(equalToConstant: 120),
+            
+            uploadButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            uploadButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            uploadButton.heightAnchor.constraint(equalToConstant: 40),
+            uploadButton.widthAnchor.constraint(equalToConstant: 140),
             
             timerLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             exitButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
             exitButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 10),
+            exitButton.heightAnchor.constraint(equalToConstant: 40),
+            exitButton.widthAnchor.constraint(equalToConstant: 120),
+            
+            infoButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            infoButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -10),
+            
+            loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            loadingIndicator.widthAnchor.constraint(equalToConstant: 200)
         ])
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewView.frame = view.bounds
+        
+        if let lastCapturedFrame = lastCapturedFrame {
+            capturedImageView.image = lastCapturedFrame
+        }
     }
     
     func startCapturingVideo() {
@@ -219,6 +276,11 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
         timer = nil
         movieOutput.stopRecording()
         updateInnerCircleColor(isCapturing: false)
+        
+        showFramesButton.isHidden = false
+        uploadButton.isHidden = false
+        infoButton.isHidden = false
+        
         pausePlayButton.isHidden = true
         isoPicker.isHidden = true
         shutterSpeedPicker.isHidden = true
@@ -227,6 +289,7 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
     
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         if error == nil {
+            videoSegments.append(outputFileURL)
             extractFrames(from: outputFileURL)
         } else {
             print("Error recording movie: \(error!.localizedDescription)")
@@ -253,6 +316,7 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
                 self.capturedFrames.append(uiImage)
                 DispatchQueue.main.async {
                     self.capturedImageView.image = uiImage
+                    self.lastCapturedFrame = uiImage
                 }
             }
         }
@@ -281,16 +345,24 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
     }
     
     @objc func exitAction() {
+      
         pausePlayButton.isHidden = false
         isoPicker.isHidden = false
         shutterSpeedPicker.isHidden = false
-        exitButton.isHidden =
+        exitButton.isHidden = true
+        showFramesButton.isHidden = true
+        uploadButton.isHidden = true
+        infoButton.isHidden = true
+
         capturedFrames.removeAll()
         capturedImageView.image = nil
         remainingTime = 30.0
         timerLabel.text = "00:30"
+
         isCapturing = false
         updateInnerCircleColor(isCapturing: false)
+        
+        videoSegments.removeAll()
     }
     
     func updateTimerLabel() {
@@ -321,6 +393,83 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
         } catch {
             print("Error updating camera settings: \(error)")
         }
+    }
+    
+    @objc func showInfo() {
+        let bottomSheet = FramesInfoBottomSheetViewController()
+        bottomSheet.videoSegments = videoSegments
+        bottomSheet.totalDuration = getTotalDuration()
+        bottomSheet.frameRate = Double(capturedFrames.count) / getTotalDuration()
+        bottomSheet.totalFrames = capturedFrames.count
+        present(bottomSheet, animated: true, completion: nil)
+    }
+    
+    @objc func uploadAction() {
+        showLoadingIndicator()
+        
+        DispatchQueue.global(qos: .background).async {
+            self.saveCapturedImagesToLocalStorage()
+            
+            DispatchQueue.main.async {
+                self.hideLoadingIndicator()
+                self.navigateToCapturedImagesViewController()
+            }
+        }
+    }
+    
+    func showLoadingIndicator() {
+        loadingIndicator.isHidden = false
+        loadingIndicator.progress = 0.0
+        
+        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+            if self.loadingIndicator.progress >= 1.0 {
+                timer.invalidate()
+            } else {
+                self.loadingIndicator.progress += 0.01
+            }
+        }
+    }
+    
+    func hideLoadingIndicator() {
+        loadingIndicator.isHidden = true
+    }
+    
+    func navigateToCapturedImagesViewController() {
+        let capturedImagesViewController = CapturedImagesViewController()
+        navigationController?.pushViewController(capturedImagesViewController, animated: true)
+    }
+    
+    func saveCapturedImagesToLocalStorage() {
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+
+        for (index, frame) in self.capturedFrames.enumerated() {
+            if let imageData = frame.jpegData(compressionQuality: 1.0) {
+                let fileName = "captured_frame_\(index).jpg"
+                let fileURL = documentsPath.appendingPathComponent(fileName)
+                
+                do {
+                    try imageData.write(to: fileURL)
+                } catch {
+                    print("Error saving image: \(error)")
+                }
+            }
+        }
+        
+        
+        DispatchQueue.main.async {
+            self.capturedFrames.removeAll()
+            self.capturedImageView.image = nil
+        }
+    }
+
+    
+    func getTotalDuration() -> Double {
+        var totalDuration: Double = 0.0
+        for url in videoSegments {
+            let asset = AVAsset(url: url)
+            totalDuration += CMTimeGetSeconds(asset.duration)
+        }
+        return totalDuration
     }
 }
 
