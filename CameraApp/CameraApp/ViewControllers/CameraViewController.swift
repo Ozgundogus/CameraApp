@@ -70,13 +70,43 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
     
     func setupCamera() {
         captureSession = AVCaptureSession()
-        captureSession.sessionPreset = .high
         
         guard let device = AVCaptureDevice.default(for: .video) else {
             print("No video device found")
             return
         }
         captureDevice = device
+    
+        var bestFormat: AVCaptureDevice.Format?
+        var maxResolution: Int32 = 0
+        
+        for format in captureDevice.formats {
+            for range in format.videoSupportedFrameRateRanges {
+                let description = format.formatDescription
+                let dimensions = CMVideoFormatDescriptionGetDimensions(description)
+                
+                let resolution = dimensions.width * dimensions.height
+                if resolution >= 4000 * 3000 && resolution > maxResolution {
+                    maxResolution = resolution
+                    bestFormat = format
+                } else if resolution > maxResolution {
+                    maxResolution = resolution
+                    bestFormat = format
+                }
+            }
+        }
+        
+        if let bestFormat = bestFormat {
+            do {
+                try captureDevice.lockForConfiguration()
+                captureDevice.activeFormat = bestFormat
+                captureDevice.unlockForConfiguration()
+            } catch {
+                print("Could not set the best format: \(error)")
+            }
+        }
+        
+        captureSession.sessionPreset = .high
         
         do {
             let input = try AVCaptureDeviceInput(device: captureDevice)
@@ -102,7 +132,9 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         previewView.videoPreviewLayer.session = captureSession
         previewView.videoPreviewLayer.videoGravity = .resizeAspectFill
         
-        captureSession.startRunning()
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.captureSession.startRunning()
+        }
     }
     
     func setupUI() {
@@ -158,7 +190,7 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         showFramesButton.isHidden = true
         view.addSubview(showFramesButton)
         
-        uploadButton.setTitle("Upload", for: .normal)
+        uploadButton.setTitle("Save Storage", for: .normal)
         uploadButton.setTitleColor(.white, for: .normal)
         uploadButton.backgroundColor = .purple
         uploadButton.layer.cornerRadius = 8
@@ -238,7 +270,7 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
             exitButton.heightAnchor.constraint(equalToConstant: 40),
             exitButton.widthAnchor.constraint(equalToConstant: 120),
             
-            infoButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            infoButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor,constant: 18),
             infoButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -10),
             
             loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -246,7 +278,7 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
             loadingIndicator.widthAnchor.constraint(equalToConstant: 200)
         ])
     }
-    
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewView.frame = view.bounds
