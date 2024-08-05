@@ -1,13 +1,13 @@
 //
-//  FrameCell.swift
+//  CollectionViewCell.swift
 //  CameraApp
 //
-//  Created by Ozgun Dogus on 1.08.2024.
+//  Created by Ozgun Dogus on 5.08.2024.
 //
 
 import UIKit
 
-final class FrameCell: UICollectionViewCell {
+final class CapturedImageCell: UICollectionViewCell {
     var imageView: UIImageView!
     
     override init(frame: CGRect) {

@@ -8,7 +8,7 @@
 
 import UIKit
 
-class CapturedImagesViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate {
+final class CapturedImagesViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate {
     var collectionView: UICollectionView!
     var capturedImages: [UIImage] = []
 
@@ -97,29 +97,4 @@ class CapturedImagesViewController: UIViewController, UICollectionViewDataSource
     }
 }
 
-class CapturedImageCell: UICollectionViewCell {
-    let imageView = UIImageView()
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupUI()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func setupUI() {
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
-        contentView.addSubview(imageView)
-        
-        NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            imageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            imageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
-        ])
-    }
-}
 
