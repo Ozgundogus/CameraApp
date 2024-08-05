@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  CameraViewController.swift
 //  CameraApp
 //
 //  Created by Ozgun Dogus on 31.07.2024.
