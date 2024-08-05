@@ -8,7 +8,7 @@
 
 import UIKit
 
-class FramesViewController: UIViewController, UICollectionViewDataSource {
+final class FramesViewController: UIViewController, UICollectionViewDataSource {
     var frames: [UIImage] = []
     var collectionView: UICollectionView!
     

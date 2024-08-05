@@ -9,7 +9,7 @@
 import UIKit
 import AVFoundation
 
-class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelegate {
+final class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelegate {
     var captureSession: AVCaptureSession!
     var movieOutput: AVCaptureMovieFileOutput!
     var captureDevice: AVCaptureDevice!
@@ -327,6 +327,8 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
             stopCapturingVideo()
         } else {
             startCapturingVideo()
+            lastCapturedFrame = nil
+            capturedImageView.image = nil
         }
     }
     
@@ -345,7 +347,6 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
     }
     
     @objc func exitAction() {
-      
         pausePlayButton.isHidden = false
         isoPicker.isHidden = false
         shutterSpeedPicker.isHidden = false
@@ -353,16 +354,17 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
         showFramesButton.isHidden = true
         uploadButton.isHidden = true
         infoButton.isHidden = true
-
+        
         capturedFrames.removeAll()
         capturedImageView.image = nil
         remainingTime = 30.0
         timerLabel.text = "00:30"
-
+        
         isCapturing = false
         updateInnerCircleColor(isCapturing: false)
         
         videoSegments.removeAll()
+        lastCapturedFrame = nil
     }
     
     func updateTimerLabel() {
@@ -441,7 +443,7 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
     
     func saveCapturedImagesToLocalStorage() {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-
+        
         for (index, frame) in self.capturedFrames.enumerated() {
             if let imageData = frame.jpegData(compressionQuality: 1.0) {
                 let fileName = "captured_frame_\(index).jpg"
@@ -455,13 +457,11 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
             }
         }
         
-        
         DispatchQueue.main.async {
             self.capturedFrames.removeAll()
             self.capturedImageView.image = nil
         }
     }
-
     
     func getTotalDuration() -> Double {
         var totalDuration: Double = 0.0
@@ -473,47 +473,3 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
     }
 }
 
-extension CameraViewController: UIPickerViewDataSource, UIPickerViewDelegate {
-    func numberOfComponents(in pickerView: UIPickerView) -> Int {
-        return 1
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-        if pickerView == isoPicker {
-            return isoSettings.count
-        } else if pickerView == shutterSpeedPicker {
-            return shutterSpeedSettings.count
-        }
-        return 0
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        if pickerView == isoPicker {
-            return "\(isoSettings[row])"
-        } else if pickerView == shutterSpeedPicker {
-            return "1/\(Int(1/shutterSpeedSettings[row]))"
-        }
-        return nil
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
-        let label = UILabel()
-        label.textColor = .white
-        label.textAlignment = .center
-        label.font = UIFont.systemFont(ofSize: 12)
-        if pickerView == isoPicker {
-            label.text = "\(isoSettings[row])"
-        } else if pickerView == shutterSpeedPicker {
-            label.text = String(format: "1/%.0f", 1/shutterSpeedSettings[row])
-        }
-        return label
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, rowHeightForComponent component: Int) -> CGFloat {
-        return 30
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        updateCameraSettings()
-    }
-}

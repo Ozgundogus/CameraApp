@@ -8,7 +8,7 @@
 
 import UIKit
 
-class FramesInfoBottomSheetViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+final class FramesInfoBottomSheetViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     var videoSegments: [URL] = []
     var totalDuration: Double = 0.0
     var frameRate: Double = 0.0
