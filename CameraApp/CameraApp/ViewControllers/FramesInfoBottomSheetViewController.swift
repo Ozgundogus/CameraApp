@@ -5,7 +5,6 @@
 //  Created by Ozgun Dogus on 4.08.2024.
 //
 
-
 import UIKit
 
 final class FramesInfoBottomSheetViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
@@ -25,34 +24,55 @@ final class FramesInfoBottomSheetViewController: UIViewController, UITableViewDa
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         tableView.reloadData()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
         adjustPreferredContentSize()
     }
     
     func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         view.layer.cornerRadius = 16
         view.layer.masksToBounds = true
+        
+        let closeButton = UIButton(type: .system)
+        closeButton.setImage(UIImage(systemName: "xmark.circle"), for: .normal)
+        closeButton.tintColor = .label
+        closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(closeButton)
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        tableView.isScrollEnabled = false
+        tableView.isScrollEnabled = true
         view.addSubview(tableView)
         
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            tableView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.9),
+            
+            closeButton.bottomAnchor.constraint(equalTo: tableView.topAnchor, constant: -8),
+            closeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            closeButton.widthAnchor.constraint(equalToConstant: 24),
+            closeButton.heightAnchor.constraint(equalToConstant: 24)
         ])
     }
     
+    @objc func closeButtonTapped() {
+        dismiss(animated: true, completion: nil)
+    }
+    
     func adjustPreferredContentSize() {
-        // Calculate the height of the table view content
-        let contentHeight = cellHeight * CGFloat(numberOfRows)
-        
-        preferredContentSize = CGSize(width: view.frame.width, height: contentHeight)
+        let screenHeight = UIScreen.main.bounds.height
+        let desiredHeight = screenHeight / 1.8
+        view.frame.size.height = desiredHeight
+        view.frame.origin.y = screenHeight - desiredHeight
+        preferredContentSize = CGSize(width: view.frame.width, height: desiredHeight)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -64,13 +84,13 @@ final class FramesInfoBottomSheetViewController: UIViewController, UITableViewDa
         
         switch indexPath.row {
         case 0:
-            cell.textLabel?.text = "Size of the captured: \(getTotalFileSize()) MB"
+            cell.textLabel?.text = "Size of the captured: \(String(format: "%.2f", getTotalFileSize())) MB"
         case 1:
             cell.textLabel?.text = "Amount of the captured: \(videoSegments.count) segments"
         case 2:
-            cell.textLabel?.text = "Duration of the whole capture: \(totalDuration) seconds"
+            cell.textLabel?.text = "Duration of the whole capture: \(String(format: "%.2f", totalDuration)) seconds"
         case 3:
-            cell.textLabel?.text = "Frame rate: \(frameRate) frames per second"
+            cell.textLabel?.text = "Frame rate: \(String(format: "%.2f", frameRate)) frames per second"
         case 4:
             cell.textLabel?.text = "Total duration: \(Int(totalDuration)) seconds"
         case 5:
@@ -90,7 +110,7 @@ final class FramesInfoBottomSheetViewController: UIViewController, UITableViewDa
         var totalSize: Double = 0.0
         for url in videoSegments {
             if let fileSize = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Double {
-                totalSize += fileSize ?? 0.0
+                totalSize += fileSize
             }
         }
         return totalSize / (1024 * 1024)

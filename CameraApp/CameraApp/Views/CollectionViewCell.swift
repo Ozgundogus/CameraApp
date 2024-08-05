@@ -1,5 +1,5 @@
 //
-//  CollectionViewCell.swift
+//  CapturedImageCell.swift
 //  CameraApp
 //
 //  Created by Ozgun Dogus on 5.08.2024.
