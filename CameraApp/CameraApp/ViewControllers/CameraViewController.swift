@@ -81,7 +81,7 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         var maxResolution: Int32 = 0
         
         for format in captureDevice.formats {
-            for range in format.videoSupportedFrameRateRanges {
+            for _ in format.videoSupportedFrameRateRanges {
                 let description = format.formatDescription
                 let dimensions = CMVideoFormatDescriptionGetDimensions(description)
                 
@@ -130,7 +130,7 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         }
         
         previewView.videoPreviewLayer.session = captureSession
-        previewView.videoPreviewLayer.videoGravity = .resizeAspect
+        previewView.videoPreviewLayer.videoGravity = .resizeAspectFill
         
         DispatchQueue.global(qos: .userInitiated).async {
             self.captureSession.startRunning()
@@ -286,7 +286,7 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         if let lastCapturedFrame = lastCapturedFrame {
             capturedImageView.image = lastCapturedFrame
             capturedImageView.frame = previewView.frame
-            capturedImageView.contentMode = .scaleAspectFit
+            capturedImageView.contentMode = .scaleAspectFill
         }
     }
     
@@ -351,6 +351,7 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
                 self.capturedFrames.append(uiImage)
                 DispatchQueue.main.async {
                     self.capturedImageView.image = uiImage
+                    self.capturedImageView.contentMode = .scaleAspectFill
                     self.lastCapturedFrame = uiImage
                 }
             }
@@ -507,4 +508,5 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         return totalDuration
     }
 }
+
 
