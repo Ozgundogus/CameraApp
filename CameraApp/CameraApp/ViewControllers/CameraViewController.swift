@@ -130,7 +130,7 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         }
         
         previewView.videoPreviewLayer.session = captureSession
-        previewView.videoPreviewLayer.videoGravity = .resizeAspectFill
+        previewView.videoPreviewLayer.videoGravity = .resizeAspect
         
         DispatchQueue.global(qos: .userInitiated).async {
             self.captureSession.startRunning()
@@ -285,6 +285,8 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         
         if let lastCapturedFrame = lastCapturedFrame {
             capturedImageView.image = lastCapturedFrame
+            capturedImageView.frame = previewView.frame
+            capturedImageView.contentMode = .scaleAspectFit
         }
     }
     
@@ -332,16 +334,17 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         let asset = AVAsset(url: videoURL)
         let imageGenerator = AVAssetImageGenerator(asset: asset)
         imageGenerator.appliesPreferredTrackTransform = true
-        
+        imageGenerator.maximumSize = CGSize(width: 4000, height: 3000)
+
         let duration = asset.duration
         let durationTime = CMTimeGetSeconds(duration)
-        
+
         var times = [NSValue]()
         for i in 0..<Int(durationTime * 5) {
             let cmTime = CMTime(seconds: Double(i) * 0.2, preferredTimescale: 600)
             times.append(NSValue(time: cmTime))
         }
-        
+
         imageGenerator.generateCGImagesAsynchronously(forTimes: times) { requestedTime, image, actualTime, result, error in
             if let cgImage = image, result == .succeeded {
                 let uiImage = UIImage(cgImage: cgImage)
