@@ -49,6 +49,7 @@ extension CameraViewController: UIPickerViewDataSource, UIPickerViewDelegate {
     }
     
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        
         updateCameraSettings()
     }
 }
