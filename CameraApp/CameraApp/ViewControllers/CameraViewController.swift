@@ -9,21 +9,18 @@
 import UIKit
 import AVFoundation
 
-final class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelegate {
+final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate {
     var captureSession: AVCaptureSession!
-    var movieOutput: AVCaptureMovieFileOutput!
     var captureDevice: AVCaptureDevice!
-    
+    var photoOutput: AVCapturePhotoOutput!
     var previewView: PreviewView!
     var timer: Timer?
+    var captureTimer: Timer?
     var captureCounter = 0
-    var maxCaptureCount = 150
-    
+    var maxCaptureCount = 4
     var isoSettings: [Float] = [50, 100, 200, 400, 800, 1600]
     var shutterSpeedSettings: [Double] = [1/1000, 1/500, 1/250, 1/125, 1/60, 1/30]
-    
     var capturedFrames: [UIImage] = []
-    var videoSegments: [URL] = []
     var lastCapturedFrame: UIImage?
     
     let isoPicker = UIPickerView()
@@ -38,8 +35,9 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
     let loadingIndicator = UIProgressView(progressViewStyle: .default)
     
     var isCapturing = false
-    var remainingTime: Double = 30.0
-    
+    var remainingTime: Double = 0.0
+    var videoDuration: Double = 30.0
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -105,9 +103,9 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
                 print("Could not set the best format: \(error)")
             }
         }
-        
+
         captureSession.sessionPreset = .high
-        
+
         do {
             let input = try AVCaptureDeviceInput(device: captureDevice)
             if captureSession.canAddInput(input) {
@@ -120,18 +118,18 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
             print("Could not create video device input: \(error)")
             return
         }
-        
-        movieOutput = AVCaptureMovieFileOutput()
-        if captureSession.canAddOutput(movieOutput) {
-            captureSession.addOutput(movieOutput)
+
+        photoOutput = AVCapturePhotoOutput()
+        if captureSession.canAddOutput(photoOutput) {
+            captureSession.addOutput(photoOutput)
         } else {
-            print("Could not add movie file output to the session")
+            print("Could not add photo output to the session")
             return
         }
-        
+
         previewView.videoPreviewLayer.session = captureSession
         previewView.videoPreviewLayer.videoGravity = .resizeAspectFill
-        
+
         DispatchQueue.global(qos: .userInitiated).async {
             self.captureSession.startRunning()
         }
@@ -220,7 +218,7 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         timerLabel.textColor = .white
         timerLabel.textAlignment = .center
         timerLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 18, weight: .medium)
-        timerLabel.text = "00:30"
+        timerLabel.text = "00:00"
         view.addSubview(timerLabel)
         
         view.addSubview(loadingIndicator)
@@ -290,26 +288,26 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         }
     }
     
-    func startCapturingVideo() {
+    func startCapturingPhotos() {
         isCapturing = true
         captureCounter = 0
-        remainingTime = 30.0
-        let outputFilePath = NSTemporaryDirectory() + UUID().uuidString + ".mov"
-        let outputURL = URL(fileURLWithPath: outputFilePath)
-        movieOutput.startRecording(to: outputURL, recordingDelegate: self)
-        updateInnerCircleColor(isCapturing: true)
+        remainingTime = 0.0
         
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
             self.updateTimerLabel()
         }
+        
+        captureTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { _ in
+            self.capturePhoto()
+        }
     }
     
-    func stopCapturingVideo() {
+    func stopCapturingPhotos() {
         isCapturing = false
+        captureTimer?.invalidate()
+        captureTimer = nil
         timer?.invalidate()
         timer = nil
-        movieOutput.stopRecording()
-        updateInnerCircleColor(isCapturing: false)
         
         showFramesButton.isHidden = false
         uploadButton.isHidden = false
@@ -320,39 +318,29 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         shutterSpeedPicker.isHidden = true
         exitButton.isHidden = false
     }
-    
-    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        if error == nil {
-            videoSegments.append(outputFileURL)
-            extractFrames(from: outputFileURL)
-        } else {
-            print("Error recording movie: \(error!.localizedDescription)")
-        }
+
+    func capturePhoto() {
+        let photoSettings = AVCapturePhotoSettings()
+        photoSettings.flashMode = .off
+        photoSettings.isAutoStillImageStabilizationEnabled = photoOutput.isStillImageStabilizationSupported
+        
+        photoOutput.capturePhoto(with: photoSettings, delegate: self)
     }
-    
-    func extractFrames(from videoURL: URL) {
-        let asset = AVAsset(url: videoURL)
-        let imageGenerator = AVAssetImageGenerator(asset: asset)
-        imageGenerator.appliesPreferredTrackTransform = true
-        imageGenerator.maximumSize = CGSize(width: 4000, height: 3000)
 
-        let duration = asset.duration
-        let durationTime = CMTimeGetSeconds(duration)
-
-        var times = [NSValue]()
-        for i in 0..<Int(durationTime * 5) {
-            let cmTime = CMTime(seconds: Double(i) * 0.2, preferredTimescale: 600)
-            times.append(NSValue(time: cmTime))
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+        if let error = error {
+            print("Error capturing photo: \(error)")
+            return
         }
 
-        imageGenerator.generateCGImagesAsynchronously(forTimes: times) { requestedTime, image, actualTime, result, error in
-            if let cgImage = image, result == .succeeded {
-                let uiImage = UIImage(cgImage: cgImage)
-                self.capturedFrames.append(uiImage)
+        DispatchQueue.global(qos: .background).async {
+            if let imageData = photo.fileDataRepresentation(),
+               let image = UIImage(data: imageData) {
+                self.capturedFrames.append(image)
+                self.lastCapturedFrame = image
                 DispatchQueue.main.async {
-                    self.capturedImageView.image = uiImage
+                    self.capturedImageView.image = image
                     self.capturedImageView.contentMode = .scaleAspectFill
-                    self.lastCapturedFrame = uiImage
                 }
             }
         }
@@ -360,9 +348,9 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
     
     @objc func toggleCapture(sender: UIButton) {
         if isCapturing {
-            stopCapturingVideo()
+            stopCapturingPhotos()
         } else {
-            startCapturingVideo()
+            startCapturingPhotos()
             lastCapturedFrame = nil
             capturedImageView.image = nil
         }
@@ -383,65 +371,29 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
     }
     
     @objc func exitAction() {
-        pausePlayButton.isHidden = false
-        isoPicker.isHidden = false
-        shutterSpeedPicker.isHidden = false
-        exitButton.isHidden = true
-        showFramesButton.isHidden = true
-        uploadButton.isHidden = true
-        infoButton.isHidden = true
+        stopCapturingPhotos()
         
-        capturedFrames.removeAll()
-        capturedImageView.image = nil
-        remainingTime = 30.0
-        timerLabel.text = "00:30"
-        
-        isCapturing = false
-        updateInnerCircleColor(isCapturing: false)
-        
-        videoSegments.removeAll()
-        lastCapturedFrame = nil
-    }
-    
-    func updateTimerLabel() {
-        remainingTime -= 1.0
-        let minutes = Int(remainingTime) / 60
-        let seconds = Int(remainingTime) % 60
-        timerLabel.text = String(format: "%02d:%02d", minutes, seconds)
-        
-        if remainingTime <= 0 {
-            stopCapturingVideo()
+        DispatchQueue.main.async {
+            self.capturedFrames.removeAll()
+            
+            self.capturedImageView.image = nil
+            self.lastCapturedFrame = nil
+            
+            self.pausePlayButton.isHidden = false
+            self.isoPicker.isHidden = false
+            self.shutterSpeedPicker.isHidden = false
+            self.exitButton.isHidden = true
+            self.showFramesButton.isHidden = true
+            self.uploadButton.isHidden = true
+            self.infoButton.isHidden = true
+            
+            self.remainingTime = 0.0 
+            self.timerLabel.text = String(format: "%02d:%02d", Int(self.remainingTime) / 60, Int(self.remainingTime) % 60)
+            
+            self.isCapturing = false
         }
     }
-    
-    func updateInnerCircleColor(isCapturing: Bool) {
-        if let innerCircle = pausePlayButton.subviews.first {
-            innerCircle.backgroundColor = isCapturing ? .red : .red
-        }
-    }
-    
-    func updateCameraSettings() {
-        guard let device = captureDevice else { return }
-        do {
-            try device.lockForConfiguration()
-            let iso = isoSettings[isoPicker.selectedRow(inComponent: 0)]
-            let shutterSpeed = CMTimeMake(value: 1, timescale: Int32(shutterSpeedSettings[shutterSpeedPicker.selectedRow(inComponent: 0)] * 1000000))
-            device.setExposureModeCustom(duration: shutterSpeed, iso: iso, completionHandler: nil)
-            device.unlockForConfiguration()
-        } catch {
-            print("Error updating camera settings: \(error)")
-        }
-    }
-    
-    @objc func showInfo() {
-        let bottomSheet = FramesInfoBottomSheetViewController()
-        bottomSheet.videoSegments = videoSegments
-        bottomSheet.totalDuration = getTotalDuration()
-        bottomSheet.frameRate = Double(capturedFrames.count) / getTotalDuration()
-        bottomSheet.totalFrames = capturedFrames.count
-        present(bottomSheet, animated: true, completion: nil)
-    }
-    
+
     @objc func uploadAction() {
         showLoadingIndicator()
         
@@ -499,13 +451,35 @@ final class CameraViewController: UIViewController, AVCaptureFileOutputRecording
         }
     }
     
-    func getTotalDuration() -> Double {
-        var totalDuration: Double = 0.0
-        for url in videoSegments {
-            let asset = AVAsset(url: url)
-            totalDuration += CMTimeGetSeconds(asset.duration)
+    func updateTimerLabel() {
+        remainingTime += 1.0
+        let minutes = Int(remainingTime) / 60
+        let seconds = Int(remainingTime) % 60
+        timerLabel.text = String(format: "%02d:%02d", minutes, seconds)
+        
+        if remainingTime >= videoDuration {
+            stopCapturingPhotos()
         }
-        return totalDuration
+    }
+    
+    func updateCameraSettings() {
+           guard let device = captureDevice else { return }
+           do {
+               try device.lockForConfiguration()
+               let iso = isoSettings[isoPicker.selectedRow(inComponent: 0)]
+               let shutterSpeed = CMTimeMake(value: 1, timescale: Int32(shutterSpeedSettings[shutterSpeedPicker.selectedRow(inComponent: 0)] * 1000000))
+               device.setExposureModeCustom(duration: shutterSpeed, iso: iso, completionHandler: nil)
+               device.unlockForConfiguration()
+           } catch {
+               print("Error updating camera settings: \(error)")
+           }
+       }
+    
+    @objc func showInfo() {
+        let bottomSheet = FramesInfoBottomSheetViewController()
+        bottomSheet.totalDuration = remainingTime
+        bottomSheet.totalFrames = capturedFrames.count
+        present(bottomSheet, animated: true, completion: nil)
     }
 }
 
