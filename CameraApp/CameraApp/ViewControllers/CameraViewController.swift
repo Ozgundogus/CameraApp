@@ -463,17 +463,29 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
     }
     
     func updateCameraSettings() {
-           guard let device = captureDevice else { return }
-           do {
-               try device.lockForConfiguration()
-               let iso = isoSettings[isoPicker.selectedRow(inComponent: 0)]
-               let shutterSpeed = CMTimeMake(value: 1, timescale: Int32(shutterSpeedSettings[shutterSpeedPicker.selectedRow(inComponent: 0)] * 1000000))
-               device.setExposureModeCustom(duration: shutterSpeed, iso: iso, completionHandler: nil)
-               device.unlockForConfiguration()
-           } catch {
-               print("Error updating camera settings: \(error)")
-           }
-       }
+        guard let device = captureDevice else { return }
+        do {
+            try device.lockForConfiguration()
+            
+            let iso = isoSettings[isoPicker.selectedRow(inComponent: 0)]
+            let minISO = device.activeFormat.minISO
+            let maxISO = device.activeFormat.maxISO
+            let adjustedISO = min(max(iso, minISO), maxISO)
+            
+            let selectedShutterSpeed = shutterSpeedSettings[shutterSpeedPicker.selectedRow(inComponent: 0)]
+            let shutterSpeed = CMTimeMake(value: 1, timescale: Int32(1.0 / selectedShutterSpeed))
+            
+            let minDuration = device.activeFormat.minExposureDuration
+            let maxDuration = device.activeFormat.maxExposureDuration
+            let adjustedShutterSpeed = CMTimeMinimum(CMTimeMaximum(shutterSpeed, minDuration), maxDuration) 
+            
+            device.setExposureModeCustom(duration: adjustedShutterSpeed, iso: adjustedISO, completionHandler: nil)
+            device.unlockForConfiguration()
+        } catch {
+            print("Error updating camera settings: \(error)")
+        }
+    }
+
     
     @objc func showInfo() {
         let bottomSheet = FramesInfoBottomSheetViewController()
