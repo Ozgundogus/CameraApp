@@ -37,7 +37,7 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
     var isCapturing = false
     var remainingTime: Double = 0.0
     var videoDuration: Double = 30.0
-    var totalImageSize: Int = 0 // Toplam fotoğraf boyutu (byte cinsinden)
+    var totalImageSize: Int = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -459,9 +459,6 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
         let seconds = Int(remainingTime) % 60
         timerLabel.text = String(format: "%02d:%02d", minutes, seconds)
         
-        if remainingTime >= videoDuration {
-            stopCapturingPhotos()
-        }
     }
     
     func updateCameraSettings() {
