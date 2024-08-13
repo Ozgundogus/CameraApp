@@ -37,6 +37,7 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
     var isCapturing = false
     var remainingTime: Double = 0.0
     var videoDuration: Double = 30.0
+    var totalImageSize: Int = 0 // Toplam fotoğraf boyutu (byte cinsinden)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -326,6 +327,10 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
         
         photoOutput.capturePhoto(with: photoSettings, delegate: self)
     }
+    
+    func photoOutput(_ output: AVCapturePhotoOutput, willCapturePhotoFor resolvedSettings: AVCaptureResolvedPhotoSettings) {
+          AudioServicesDisposeSystemSoundID(1108)
+      }
 
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if let error = error {
@@ -337,11 +342,8 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
             if let imageData = photo.fileDataRepresentation(),
                let image = UIImage(data: imageData) {
                 self.capturedFrames.append(image)
-                self.lastCapturedFrame = image
-                DispatchQueue.main.async {
-                    self.capturedImageView.image = image
-                    self.capturedImageView.contentMode = .scaleAspectFill
-                }
+                self.totalImageSize += imageData.count
+                
             }
         }
     }
@@ -387,7 +389,7 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
             self.uploadButton.isHidden = true
             self.infoButton.isHidden = true
             
-            self.remainingTime = 0.0 
+            self.remainingTime = 0.0
             self.timerLabel.text = String(format: "%02d:%02d", Int(self.remainingTime) / 60, Int(self.remainingTime) % 60)
             
             self.isCapturing = false
@@ -477,7 +479,7 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
             
             let minDuration = device.activeFormat.minExposureDuration
             let maxDuration = device.activeFormat.maxExposureDuration
-            let adjustedShutterSpeed = CMTimeMinimum(CMTimeMaximum(shutterSpeed, minDuration), maxDuration) 
+            let adjustedShutterSpeed = CMTimeMinimum(CMTimeMaximum(shutterSpeed, minDuration), maxDuration)
             
             device.setExposureModeCustom(duration: adjustedShutterSpeed, iso: adjustedISO, completionHandler: nil)
             device.unlockForConfiguration()
@@ -491,8 +493,7 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
         let bottomSheet = FramesInfoBottomSheetViewController()
         bottomSheet.totalDuration = remainingTime
         bottomSheet.totalFrames = capturedFrames.count
+        bottomSheet.totalSize = totalImageSize
         present(bottomSheet, animated: true, completion: nil)
     }
 }
-
-

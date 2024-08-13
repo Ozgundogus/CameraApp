@@ -8,10 +8,9 @@
 import UIKit
 
 final class FramesInfoBottomSheetViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-    var videoSegments: [URL] = []
     var totalDuration: Double = 0.0
-    var frameRate: Double = 0.0
     var totalFrames: Int = 0
+    var totalSize: Int = 0
     let tableView = UITableView()
     let cellHeight: CGFloat = 44.0
     let numberOfRows = 6
@@ -84,17 +83,15 @@ final class FramesInfoBottomSheetViewController: UIViewController, UITableViewDa
         
         switch indexPath.row {
         case 0:
-            cell.textLabel?.text = "Size of the captured: \(String(format: "%.2f", getTotalFileSize())) MB"
+            cell.textLabel?.text = "Size of the captured images: \(String(format: "%.2f", getTotalImageSize())) MB"
         case 1:
-            cell.textLabel?.text = "Amount of the captured: \(videoSegments.count) segments"
-        case 2:
             cell.textLabel?.text = "Duration of the whole capture: \(String(format: "%.2f", totalDuration)) seconds"
+        case 2:
+            cell.textLabel?.text = "Frame rate: \(String(format: "%.2f", Double(totalFrames) / totalDuration)) frames per second"
         case 3:
-            cell.textLabel?.text = "Frame rate: \(String(format: "%.2f", frameRate)) frames per second"
-        case 4:
-            cell.textLabel?.text = "Total duration: \(Int(totalDuration)) seconds"
-        case 5:
             cell.textLabel?.text = "Total frames: \(totalFrames) frames"
+        case 4:
+            cell.textLabel?.text = "Total size: \(String(format: "%.2f", getTotalImageSize())) MB"
         default:
             break
         }
@@ -106,13 +103,7 @@ final class FramesInfoBottomSheetViewController: UIViewController, UITableViewDa
         return cellHeight
     }
     
-    func getTotalFileSize() -> Double {
-        var totalSize: Double = 0.0
-        for url in videoSegments {
-            if let fileSize = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Double {
-                totalSize += fileSize
-            }
-        }
-        return totalSize / (1024 * 1024)
+    func getTotalImageSize() -> Double {
+        return Double(totalSize) / (1024 * 1024) 
     }
 }
